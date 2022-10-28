@@ -57,15 +57,19 @@ getStatusRaw adress = do
       Left e -> httpExceptionToServerStatus e
       Right response -> fromStatus $ getResponseStatus response
 
+-- | Translates Http exception into server status.
 httpExceptionToServerStatus :: HttpException -> ServerStatus
 httpExceptionToServerStatus _ = NotAvaible
 
+-- | Translates Http response status into server status.
 fromStatus :: Status -> ServerStatus
-fromStatus status =
-   case statusCode status of
-      200 -> Online
-      _   -> NotAvaible
+fromStatus status
+   | code == 200 = Online
+   | otherwise   = NotAvaible
+   where
+    code = statusCode status
 
+-- | Translates adress into http response.
 constructPingRequest :: ServerAdress -> Request
 constructPingRequest ServerAdress{..} =
    setRequestHost _host

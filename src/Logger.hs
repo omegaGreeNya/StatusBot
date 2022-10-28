@@ -11,6 +11,10 @@ module Logger
     , createConsoleConfig
     , createFileConfig
     , createHandle
+    , mockedHandle
+    , noFormatting
+    , simpleFormatting
+    , dateFormating
     , logDebug
     , logInfo
     , logWarning
@@ -19,6 +23,7 @@ module Logger
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text)
+import Data.Time.Clock (getCurrentTime)
 import System.IO (openFile)
 
 import qualified Data.Text.IO as T
@@ -27,6 +32,7 @@ import qualified System.IO as File (Handle, IOMode(..))
 import Logger.Handle
    (Handle(..), LogLevel(..), logDebug
    , logInfo, logWarning, logError)
+import Utils ((.<))
 
 -- | Output handle.
 data OutHandle
@@ -57,9 +63,29 @@ createConsoleConfig cfgMinLogLeveL cfgFormatter = do
    let cfgConnectionHandle = Console
    return Config{..}
 
-
+-- | Creates Logger Handle from provided Config.
 createHandle :: MonadIO m => Config m -> Handle m
 createHandle cfg = Handle $ logger cfg
+
+-- | Suitable for testing. Does Nothing.
+mockedHandle :: Monad m => Handle m
+mockedHandle = Handle (\_ _ -> return ())
+
+-- | Does nothing with the messages.
+noFormatting :: Monad m => LogLevel -> Text -> m Text
+noFormatting _ = return
+
+-- | Adds log level to messages.
+simpleFormatting :: Monad m => LogLevel -> Text -> m Text
+simpleFormatting lvl text =
+   return $ "[" .< lvl <> "] " <> text
+
+-- | Adds current UTC time and log level to messages.
+dateFormating :: MonadIO m => LogLevel -> Text -> m Text
+dateFormating lvl text = do
+   currentUTCTime <- liftIO getCurrentTime
+   return $ "[" .< currentUTCTime <> " " .< lvl <> "] " <> text
+   
 
 -- >>
 
@@ -74,13 +100,13 @@ logger :: MonadIO m
        -> Text
        -> m ()
 logger Config{..} textLogLvl textToLog
-   | cfgMinLogLeveL <= textLogLvl = formattedText >>= hLog cfgConnectionHandle
+   | cfgMinLogLeveL <= textLogLvl = formattedText >>= loggerRaw cfgConnectionHandle
    | otherwise                    = return ()
    where
       formattedText = cfgFormatter textLogLvl textToLog
 
 -- | Puts log message to destination defined by 'OutHandle'.
-hLog :: MonadIO m => OutHandle -> Text -> m ()
-hLog Console = liftIO . T.putStrLn
-hLog (File hFile) = liftIO . T.hPutStrLn hFile
+loggerRaw :: MonadIO m => OutHandle -> Text -> m ()
+loggerRaw Console = liftIO . T.putStrLn
+loggerRaw (File hFile) = liftIO . T.hPutStrLn hFile
 -- >>
