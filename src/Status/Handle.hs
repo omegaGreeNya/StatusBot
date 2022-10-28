@@ -2,9 +2,11 @@
 -- | Module difenes bot logic.
 module Status.Handle
     ( Handle(..)
-    , Status(..)
+    , ServerStatus(..)
     , getStatus
     ) where
+
+import Data.ByteString (ByteString)
 
 import Logger (logInfo)
 import Utils ((.<))
@@ -15,14 +17,14 @@ import qualified Logger
 data Handle adress m = Handle
    { hLogger :: Logger.Handle m
    -- ^ Injected logger handle.
-   , hGetStatus :: adress -> m Status
+   , hGetStatus :: adress -> m ServerStatus
    -- ^ Logic is abstracted from actual
    -- implementation of this function.
    }
 
-data Status
+data ServerStatus
    = Online
-   | Offline
+   | NotAvaible
    deriving (Show, Eq)
 
 -- | Returns status and logs action.
@@ -30,7 +32,7 @@ getStatus
    :: (Monad m, Show adress)
    => Handle adress m
    -> adress
-   -> m Status
+   -> m ServerStatus
 getStatus Handle{..} adress = do
    logInfo hLogger $ "Scanning " .< adress 
    status <- hGetStatus adress
