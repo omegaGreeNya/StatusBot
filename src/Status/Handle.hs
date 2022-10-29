@@ -6,8 +6,6 @@ module Status.Handle
     , getStatus
     ) where
 
-import Data.ByteString (ByteString)
-
 import Logger (logInfo)
 import Utils ((.<))
 

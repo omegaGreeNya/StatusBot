@@ -25,6 +25,8 @@ source-repository head
 
 library
   exposed-modules:
+      Constants
+      Initialization
       Logger
       Logger.Handle
       Status
@@ -38,7 +40,8 @@ library
       OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , http-client
     , http-conduit
@@ -58,6 +61,7 @@ executable StatusBot-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       StatusBot
+    , aeson
     , base >=4.7 && <5
     , bytestring
     , http-client
@@ -79,6 +83,7 @@ test-suite StatusBot-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       StatusBot
+    , aeson
     , base >=4.7 && <5
     , bytestring
     , http-client

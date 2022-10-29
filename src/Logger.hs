@@ -1,17 +1,15 @@
 {-# LANGUAGE RecordWildCards #-}
 -- | Module defines logger implementation
 -- and it's initialization interface.
-
--- TO-DO
--- Fix FLAW
---    file to log to may not exist.
 module Logger
-    ( Config
+    ( Config(..)
+    , Formatter
     , Handle
-    , createConsoleConfig
-    , createFileConfig
+    , LogLevel(..)
+    , OutputHandle(..)
     , createHandle
     , mockedHandle
+    , shutdownConfig
     , noFormatting
     , simpleFormatting
     , dateFormating
@@ -21,13 +19,13 @@ module Logger
     , logError
     ) where
 
+import Control.Monad (when)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text)
 import Data.Time.Clock (getCurrentTime)
-import System.IO (openFile)
 
 import qualified Data.Text.IO as T
-import qualified System.IO as File (Handle, IOMode(..))
+import qualified System.IO as File (hClose, Handle)
 
 import Logger.Handle
    (Handle(..), LogLevel(..), logDebug
@@ -35,33 +33,21 @@ import Logger.Handle
 import Utils ((.<))
 
 -- | Output handle.
-data OutHandle
-   = Console
-   | File File.Handle
+data OutputHandle = OutputHandle
+   { consoleLoggingAllowed :: Bool
+   , fileLogging           :: Maybe File.Handle
+   }
+
+type Formatter m = LogLevel -> Text -> m Text
 
 data Config m = Config
    { cfgMinLogLeveL      :: LogLevel
-   , cfgFormatter        :: LogLevel -> Text -> m Text
-   , cfgConnectionHandle :: OutHandle
+   , cfgFormatter        :: Formatter m
+   , cfgConnectionHandle :: OutputHandle
    }
 
 
 -- << Interface
-
--- | Creates config to log into provided filepath.
--- If file doesn't exist, it would be created.
--- File would be opened with appended mode.
-createFileConfig :: MonadIO m => LogLevel -> (LogLevel -> Text -> m Text) -> FilePath -> m (Config m)
-createFileConfig cfgMinLogLeveL cfgFormatter filePath = do
-   hFile <- liftIO $ openFile filePath File.AppendMode -- FLAW
-   let cfgConnectionHandle = File hFile
-   return Config{..}
-
--- | Creates config to log into console
-createConsoleConfig :: MonadIO m => LogLevel -> (LogLevel -> Text -> m Text) -> m (Config m)
-createConsoleConfig cfgMinLogLeveL cfgFormatter = do
-   let cfgConnectionHandle = Console
-   return Config{..}
 
 -- | Creates Logger Handle from provided Config.
 createHandle :: MonadIO m => Config m -> Handle m
@@ -72,20 +58,26 @@ mockedHandle :: Monad m => Handle m
 mockedHandle = Handle (\_ _ -> return ())
 
 -- | Does nothing with the messages.
-noFormatting :: Monad m => LogLevel -> Text -> m Text
+noFormatting :: Monad m => Formatter m
 noFormatting _ = return
 
 -- | Adds log level to messages.
-simpleFormatting :: Monad m => LogLevel -> Text -> m Text
+simpleFormatting :: Monad m => Formatter m
 simpleFormatting lvl text =
    return $ "[" .< lvl <> "] " <> text
 
 -- | Adds current UTC time and log level to messages.
-dateFormating :: MonadIO m => LogLevel -> Text -> m Text
+dateFormating :: MonadIO m => Formatter m
 dateFormating lvl text = do
    currentUTCTime <- liftIO getCurrentTime
    return $ "[" .< currentUTCTime <> " " .< lvl <> "] " <> text
-   
+
+-- | Closes log file handle if config contains one.
+shutdownConfig :: MonadIO m => Config m -> m ()
+shutdownConfig Config{..} =
+   case fileLogging cfgConnectionHandle of
+      Nothing -> return ()
+      Just hFile -> liftIO $ File.hClose hFile
 
 -- >>
 
@@ -105,8 +97,12 @@ logger Config{..} textLogLvl textToLog
    where
       formattedText = cfgFormatter textLogLvl textToLog
 
--- | Puts log message to destination defined by 'OutHandle'.
-loggerRaw :: MonadIO m => OutHandle -> Text -> m ()
-loggerRaw Console = liftIO . T.putStrLn
-loggerRaw (File hFile) = liftIO . T.hPutStrLn hFile
+-- | Puts log message to destination defined by 'OutputHandle'.
+loggerRaw :: MonadIO m => OutputHandle -> Text -> m ()
+loggerRaw OutputHandle{..} text = do
+   when consoleLoggingAllowed 
+      $ liftIO $ T.putStrLn text
+   case fileLogging of
+      Nothing -> return ()
+      Just hFile -> liftIO $ T.hPutStrLn hFile text
 -- >>
