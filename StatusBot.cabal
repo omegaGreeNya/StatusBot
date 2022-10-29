@@ -25,13 +25,17 @@ source-repository head
 
 library
   exposed-modules:
+      App
+      ConsoleHTTP
       Constants
+      Front.Handle
       Initialization
       Logger
       Logger.Handle
       Status
       Status.Handle
       Utils
+      Utils.WithLogger
   other-modules:
       Paths_StatusBot
   hs-source-dirs:

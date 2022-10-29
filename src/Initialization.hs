@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
--- | Different funtions to make life easier.
+-- | Module defines app configuration, 
+-- parsing config file and app initialization.
 module Initialization
    ( initApp
    , withLoggerConfig

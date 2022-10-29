@@ -2,14 +2,19 @@
 module Utils
    ( derivingDrop
    
+   , getCurrentTimeHiRes
+   
    , (.<~)
    , (~>.)
    , (.<)
    , (>.)
    ) where
 
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson.TH (Options (..), defaultOptions)
 import Data.Text (Text)
+import Data.Time.Clock.System (getSystemTime)
+
 import qualified Data.Text as T
 
 -- << Text manipulations / Formating
@@ -37,5 +42,12 @@ infixr 7 >.
 -- with functions defined in same module.
 derivingDrop :: Int -> Options
 derivingDrop n = defaultOptions {fieldLabelModifier = drop n}
+
+-- >>
+
+-- << Hi Res Time
+
+getCurrentTimeHiRes :: MonadIO m => m Int
+getCurrentTimeHiRes = undefined
 
 -- >>
