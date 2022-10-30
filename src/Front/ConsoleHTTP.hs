@@ -3,7 +3,7 @@
 
 -- TO-DO
 -- Add user input validation.
-module ConsoleHTTP
+module Front.ConsoleHTTP
    ( createHandle
    ) where
 

@@ -5,7 +5,7 @@ import App (runAppSimpleForever)
 
 
 import qualified Logger (createHandle)
-import qualified ConsoleHTTP (createHandle)
+import qualified Front.ConsoleHTTP as ConsoleHTTP (createHandle) 
 
 main :: IO ()
 main = do

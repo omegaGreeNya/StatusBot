@@ -25,17 +25,18 @@ source-repository head
 
 library
   exposed-modules:
+      API.Telegram
       App
-      ConsoleHTTP
       Constants
+      Front.ConsoleHTTP
       Front.Handle
+      Front.TelegramHTTP
       Initialization
       Logger
       Logger.Handle
       Status
       Status.Handle
       Utils
-      Utils.WithLogger
   other-modules:
       Paths_StatusBot
   hs-source-dirs:
@@ -50,6 +51,8 @@ library
     , http-client
     , http-conduit
     , http-types
+    , lens
+    , lens-aeson
     , text
     , time
   default-language: Haskell2010
@@ -71,6 +74,8 @@ executable StatusBot-exe
     , http-client
     , http-conduit
     , http-types
+    , lens
+    , lens-aeson
     , text
     , time
   default-language: Haskell2010
@@ -93,6 +98,8 @@ test-suite StatusBot-test
     , http-client
     , http-conduit
     , http-types
+    , lens
+    , lens-aeson
     , text
     , time
   default-language: Haskell2010

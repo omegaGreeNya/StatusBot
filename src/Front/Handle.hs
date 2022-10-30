@@ -28,7 +28,7 @@ data Handle user adress m = Handle
    -- ^ Sends servers status to user.
    }
 
--- | Asks for commands, makes servers status calls,
+-- | Asks for adresses, makes servers status calls,
 -- sends results back to users.
 -- This function intented to be used repeatedly.
 runFrontOnce

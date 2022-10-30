@@ -1,8 +1,11 @@
+{-# LANGUAGE DefaultSignatures #-}
 -- | Different funtions to make life easier.
 module Utils
    ( derivingDrop
    
    , getCurrentTimeHiRes
+   
+   , packQVal
    
    , (.<~)
    , (~>.)
@@ -15,7 +18,9 @@ import Data.Aeson.TH (Options (..), defaultOptions)
 import Data.Text (Text)
 import Data.Time.Clock.System (getSystemTime)
 
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 -- << Text manipulations / Formating
 (.<~) :: Show a => Text -> a -> Text
@@ -45,9 +50,28 @@ derivingDrop n = defaultOptions {fieldLabelModifier = drop n}
 
 -- >>
 
--- << Hi Res Time
+-- << Hi-Res Time
 
 getCurrentTimeHiRes :: MonadIO m => m Int
 getCurrentTimeHiRes = undefined
+
+-- >>
+
+-- << 
+
+-- | Type class for easy, dead-brain encoding ByteStrings
+class ToByteString a where
+   toBS :: a -> BS8.ByteString
+   default toBS :: Show a => a -> BS8.ByteString
+   toBS = BS8.pack . show
+
+instance ToByteString Int
+instance ToByteString Bool
+instance ToByteString Text where
+   toBS = T.encodeUtf8
+
+-- | Helper function for packing query items.
+packQVal :: ToByteString a => a -> Maybe BS8.ByteString
+packQVal a = Just $ toBS a
 
 -- >>
