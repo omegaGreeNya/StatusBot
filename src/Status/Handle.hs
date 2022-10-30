@@ -3,7 +3,6 @@
 module Status.Handle
     ( Handle(..)
     , ServerStatus(..)
-    , getStatus
     ) where
 
 import Logger (logInfo)
@@ -24,15 +23,3 @@ data ServerStatus
    = Online
    | NotAvaible
    deriving (Show, Eq)
-
--- | Returns status and logs action.
-getStatus
-   :: (Monad m, Show adress)
-   => Handle adress m
-   -> adress
-   -> m ServerStatus
-getStatus Handle{..} adress = do
-   logInfo hLogger $ "Scanning " .< adress 
-   status <- hGetStatus adress
-   logInfo hLogger $ "Status: " .< status
-   return status

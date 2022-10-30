@@ -8,7 +8,7 @@ import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
-import qualified Front.Handle as Front
+import qualified Front as Front
 
 
 -- | Runs app in forever loop.

@@ -14,12 +14,12 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text.Encoding as T
 
 import API.Telegram (TelegramUser)
-import Status (ServerAdress(..), ServerStatus)
+import Status.Implementation (ServerAdress(..), ServerStatus)
 import Utils ((.<),(>.))
 
 import qualified API.Telegram as API
 import qualified Front.Handle as Front
-import qualified Status
+import qualified Status.Implementation as Status
 import qualified Logger.Handle as Logger
 
 

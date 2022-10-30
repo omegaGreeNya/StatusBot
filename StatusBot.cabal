@@ -28,6 +28,7 @@ library
       API.Telegram
       App
       Constants
+      Front
       Front.ConsoleHTTP
       Front.Handle
       Front.TelegramHTTP
@@ -36,6 +37,7 @@ library
       Logger.Handle
       Status
       Status.Handle
+      Status.Implementation
       Utils
   other-modules:
       Paths_StatusBot

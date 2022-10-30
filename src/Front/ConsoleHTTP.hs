@@ -14,11 +14,11 @@ import Data.Text (Text)
 import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 
-import Status (ServerAdress(..), ServerStatus)
+import Status.Implementation (ServerAdress(..), ServerStatus)
 import Utils ((.<),(>.))
 
 import qualified Front.Handle as Front
-import qualified Status
+import qualified Status.Implementation as Status
 import qualified Logger.Handle as Logger
 
 
