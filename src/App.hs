@@ -19,4 +19,4 @@ runAppSimpleForever
 runAppSimpleForever hFront =
    forever $ do
       Front.runFrontOnce hFront
-      liftIO $ threadDelay 1000
+      liftIO $ threadDelay 100000

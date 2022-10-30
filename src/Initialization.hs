@@ -44,7 +44,8 @@ data LoggerConfig = LoggerConfig
 deriveJSON (derivingDrop 4) ''LoggerConfig
 
 data TelegramConfig = TelegramConfig
-   { cfg_token :: Text
+   { cfg_token   :: Text
+   , cfg_timeout :: Int
    } deriving (Show)
 
 deriveJSON (derivingDrop 4) ''TelegramConfig
@@ -99,9 +100,13 @@ defFrontToTelegram = False
 defTelegramToken :: Text
 defTelegramToken = ""
 
+defTelegramTimeout :: Int
+defTelegramTimeout = 60
+
 defaultTelegramConfig :: TelegramConfig
 defaultTelegramConfig = TelegramConfig
    { cfg_token = defTelegramToken
+   , cfg_timeout = defTelegramTimeout
    }
 
 defaultFrontConfig :: FrontConfig
@@ -155,8 +160,8 @@ telegramFrontEnabled AppConfig{..} =
 withTelegramAPIHandle
    :: MonadIO m => AppConfig -> (API.Telegram.Handle m -> m a) -> m a
 withTelegramAPIHandle AppConfig{..} f = do
-   let token = cfg_token $ cfg_telegram cfg_front
-   hAPITg <- API.Telegram.createHandle token
+   let TelegramConfig{..} = cfg_telegram cfg_front
+   hAPITg <- API.Telegram.createHandle cfg_token cfg_timeout
    f hAPITg
 
 -- >>
@@ -164,7 +169,7 @@ withTelegramAPIHandle AppConfig{..} f = do
 -- << Implementation
 
 -- | Interprets AppConfig into logger config.
--- Corrupted values would be substitute to dafaults.
+-- Corrupted values would be substitute to defaults.
 -- Not exposed, since function opens handle.
 createLoggerConfig :: MonadIO m => AppConfig -> m (Logger.Config m)
 createLoggerConfig AppConfig{..} = do

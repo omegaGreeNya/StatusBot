@@ -1,1 +1,17 @@
-{"logger":{"consoleLogging":true,"fileLogging":true,"logFile":"Log.txt","logLevel":"INFO","formatter":"DATE"},"front":{"consoleUsage":false,"telegramUsage":true,"telegram":{"token":"5616451207:AAFhF_3jKVZrLXpt5yPrS5pTOPAQZpldAak"}}}
+{
+  "logger": {
+    "consoleLogging": true,
+    "fileLogging": true,
+    "logFile": "Log.txt",
+    "logLevel": "DEBUG",
+    "formatter": "DATE"
+  },
+  "front": {
+    "consoleUsage": true,
+    "telegramUsage": false,
+    "telegram": {
+      "token": "",
+      "timeout": 60
+    }
+  }
+}

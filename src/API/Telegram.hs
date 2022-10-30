@@ -27,6 +27,7 @@ import Utils (packQVal)
 
 data Handle m = Handle
    { hToken     :: Text
+   , hTimeout   :: Int
    , hGetOffset :: m Int
    , hSetOffset :: Int -> m ()
    }
@@ -36,8 +37,8 @@ type TelegramUser = Int
 -- << Interface
 
 -- | Creates simple Handle with IORef holding current offset.
-createHandle :: MonadIO m => Text -> m (Handle m)
-createHandle hToken = do
+createHandle :: MonadIO m => Text -> Int -> m (Handle m)
+createHandle hToken hTimeout = do
    offsetRef <- liftIO $ newIORef 0
    let hGetOffset = liftIO $ readIORef offsetRef
    let hSetOffset offset = liftIO $ writeIORef offsetRef offset
@@ -45,7 +46,7 @@ createHandle hToken = do
 
 -- | Gets updates from telegram API.
 -- https://core.telegram.org/bots/api#getupdates
-getUpdates :: MonadIO m => Handle m -> m BS.ByteString
+getUpdates :: MonadIO m => Handle m -> m (Maybe BS.ByteString)
 getUpdates h = do
    request <- getUpdatesRequest h
    res <- liftIO $ httpBS request
@@ -121,7 +122,9 @@ getUpdatesRequest :: Monad m => Handle m -> m Request
 getUpdatesRequest h@Handle{..} = do
    offset <- hGetOffset
    return 
-      $ setRequestQueryString [("offset", packQVal offset)]
+      $ setRequestQueryString
+         [ ("offset", packQVal offset)
+         , ("timeout", packQVal hTimeout)]
       $ telegramRequest h "getUpdates"
 -- >>>
 -- >>

@@ -36,7 +36,7 @@ import Utils ((.<))
 data OutputHandle = OutputHandle
    { consoleLoggingAllowed :: Bool
    , fileLogging           :: Maybe File.Handle
-   }
+   } deriving (Show)
 
 type Formatter m = LogLevel -> Text -> m Text
 
