@@ -3,8 +3,14 @@
 -- | Module defines app configuration, 
 -- parsing config file and app initialization.
 module Initialization
-   ( initApp
+   ( AppConfig
+   , initApp
+   
+   , consoleFrontEnabled
+   , telegramFrontEnabled
+   
    , withLoggerConfig
+   , withTelegramAPIHandle
    ) where
 
 import Control.Exception (tryJust)
@@ -24,6 +30,7 @@ import Constants (configPath)
 import Utils (derivingDrop)
 
 import qualified Logger
+import qualified API.Telegram
 
 
 data LoggerConfig = LoggerConfig
@@ -36,17 +43,33 @@ data LoggerConfig = LoggerConfig
 
 deriveJSON (derivingDrop 4) ''LoggerConfig
 
+data TelegramConfig = TelegramConfig
+   { cfg_token :: Text
+   } deriving (Show)
+
+deriveJSON (derivingDrop 4) ''TelegramConfig
+
+data FrontConfig = FrontConfig
+   { cfg_consoleUsage  :: Bool
+   , cfg_telegramUsage :: Bool
+   , cfg_telegram      :: TelegramConfig
+   } deriving (Show)
+
+deriveJSON (derivingDrop 4) ''FrontConfig
+
 data AppConfig = AppConfig
    { cfg_logger :: LoggerConfig
+   , cfg_front  :: FrontConfig
    } deriving (Show)
 
 deriveJSON (derivingDrop 4) ''AppConfig
 
-defToConsole :: Bool
-defToConsole = True
+-- << Logger default
+defLogToConsole :: Bool
+defLogToConsole = False
 
-defToFile :: Bool
-defToFile = True
+defLogToFile :: Bool
+defLogToFile = True
 
 defLogFile :: FilePath
 defLogFile = "Log.txt"
@@ -54,21 +77,45 @@ defLogFile = "Log.txt"
 defLogLevel :: Text
 defLogLevel = "INFO"
 
-defFormatter :: Text
-defFormatter = "DATE"
+defLogFormatter :: Text
+defLogFormatter = "DATE"
 
 defaultLoggerConfig :: LoggerConfig
 defaultLoggerConfig = LoggerConfig   
-   { cfg_consoleLogging = defToConsole
-   , cfg_fileLogging    = defToFile
+   { cfg_consoleLogging = defLogToConsole
+   , cfg_fileLogging    = defLogToFile
    , cfg_logFile        = defLogFile
    , cfg_logLevel       = defLogLevel
-   , cfg_formatter      = defFormatter
+   , cfg_formatter      = defLogFormatter
    }
+-- >> 
+-- << Front default
+defFrontToConsole :: Bool
+defFrontToConsole = True
+
+defFrontToTelegram :: Bool
+defFrontToTelegram = False
+
+defTelegramToken :: Text
+defTelegramToken = ""
+
+defaultTelegramConfig :: TelegramConfig
+defaultTelegramConfig = TelegramConfig
+   { cfg_token = defTelegramToken
+   }
+
+defaultFrontConfig :: FrontConfig
+defaultFrontConfig = FrontConfig
+   { cfg_consoleUsage  = defFrontToConsole
+   , cfg_telegramUsage = defFrontToTelegram
+   , cfg_telegram      = defaultTelegramConfig
+   }
+-- >>
 
 defaultAppConfig :: AppConfig
 defaultAppConfig = AppConfig
    { cfg_logger = defaultLoggerConfig
+   , cfg_front  = defaultFrontConfig
    }
 
 -- << Interface
@@ -96,6 +143,21 @@ withLoggerConfig appCfg f = do
    result <- f logCfg
    Logger.shutdownConfig logCfg
    return result
+
+consoleFrontEnabled :: AppConfig -> Bool
+consoleFrontEnabled AppConfig{..} =
+   cfg_consoleUsage cfg_front
+
+telegramFrontEnabled :: AppConfig -> Bool
+telegramFrontEnabled AppConfig{..} =
+   cfg_telegramUsage cfg_front
+
+withTelegramAPIHandle
+   :: MonadIO m => AppConfig -> (API.Telegram.Handle m -> m a) -> m a
+withTelegramAPIHandle AppConfig{..} f = do
+   let token = cfg_token $ cfg_telegram cfg_front
+   hAPITg <- API.Telegram.createHandle token
+   f hAPITg
 
 -- >>
 
@@ -167,8 +229,8 @@ pickFormatter txt
          $ "Can't parse formatter type: \""
          <> txt
          <> "\"."
-         <> defFormatter
+         <> defLogFormatter
          <> " would be used intead."
-      pickFormatter defFormatter
+      pickFormatter defLogFormatter
 
 -- >>

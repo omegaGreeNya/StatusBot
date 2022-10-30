@@ -3,20 +3,22 @@
 module API.Telegram
    ( Handle (..)
    , TelegramUser
+   , createHandle
    , getUpdates
    , parseMessageUpdates
-   , sendAnswer)
-    where
+   , sendAnswer
+   ) where
 
 import Control.Lens (toListOf)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson.Lens (_Array, _Integer, _String, key)
 import Data.ByteString.Char8 (ByteString)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.Text (Text)
 import Network.HTTP.Simple 
    ( Response, Request, defaultRequest, getResponseBody, httpBS
    , setRequestMethod, setRequestHost, setRequestSecure
-   , setRequestPath, setRequestQueryString)
+   , setRequestPath, setRequestPort, setRequestQueryString)
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text.Encoding as T
@@ -32,6 +34,14 @@ data Handle m = Handle
 type TelegramUser = Int
 
 -- << Interface
+
+-- | Creates simple Handle with IORef holding current offset.
+createHandle :: MonadIO m => Text -> m (Handle m)
+createHandle hToken = do
+   offsetRef <- liftIO $ newIORef 0
+   let hGetOffset = liftIO $ readIORef offsetRef
+   let hSetOffset offset = liftIO $ writeIORef offsetRef offset
+   return Handle{..}
 
 -- | Gets updates from telegram API.
 -- https://core.telegram.org/bots/api#getupdates
@@ -81,13 +91,17 @@ getOffset json =
    let ids = toListOf
             (key "result" . _Array . traverse . key "update_id" . _Integer)
             json
-   in foldl max 1 $ map fromIntegral ids
+   in (+1) . foldl max 1 $ map fromIntegral ids
+   -- "+ 1", since telegram sends all updates with ids greated than
+   -- given offset, and since we doesn't want to get same update twice
+   -- or more times, we increase greates by one.
 
 -- <<< Requests
 
 -- | Template request.
 telegramRequest :: Handle m -> ByteString -> Request
 telegramRequest Handle{..} method = setRequestSecure True
+   $ setRequestPort 443
    $ setRequestHost "api.telegram.org"
    $ setRequestPath ("/bot" <> (T.encodeUtf8 hToken) <> "/" <> method)
    $ defaultRequest
