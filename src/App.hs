@@ -16,6 +16,7 @@ import qualified Data.Text as T
 
 import PrettyPrint
 import Parsing (parseAddress)
+import Utils ((>.))
 
 import qualified Front as Front
 import qualified Logger as Logger
@@ -61,7 +62,8 @@ runAppAdmin h@Handle{..} = do
                -> processStatusCommand h user (T.unwords rest)
                >> processMessages msgs 
             _
-               -> processMessages msgs
+               -> sendHint h user message
+               >> processMessages msgs
    processMessages userMessages
 
 -- | Answers to given user on supplied text
@@ -82,17 +84,26 @@ processStatusCommand Handle{..} user text = do
       Right address -> do
          serverStatus <- Status.getStatus hStatus address
          Front.sendMessage hFront user
-            $ "Server " 
-            <> (prettyPrint address)
+            $ (prettyPrint address)
             <> " is "
             <> (prettyPrint serverStatus)
+
+sendHint
+   :: (MonadIO m, Show user)
+   => Handle user m
+   -> user
+   -> Text
+   -> m ()
+sendHint Handle{..} user unknownCommand =
+   Front.sendMessage hFront user
+      $ unknownCommand >. " is not valid command, use \"help\" to get commands list"
 
 sendHelp
    :: (MonadIO m, Show user)
    => Handle user m
    -> user
    -> m ()
-sendHelp Handle{..} user = do
+sendHelp Handle{..} user =
    Front.sendMessage hFront user
       $ T.unlines
       [ "help - prints this message"

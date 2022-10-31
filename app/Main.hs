@@ -7,7 +7,7 @@ import Data.Maybe (catMaybes)
 import Constants (configPath)
 import Initialization
    ( AppConfig, initApp, withTelegramAPIHandle, withLoggerConfig
-   , telegramFrontEnabled)
+   , telegramFrontEnabled, getFeedbackAddress)
 
 import qualified App
 import qualified Front.ConsoleHTTP as ConsoleHTTP 
@@ -23,7 +23,7 @@ main = do
       let hLogger = Logger.createHandle loggerCfg
       threads <- runExternalFronts appCfg hLogger
       warnOnNoFronts threads
-      runConsoleAdmin hLogger
+      runConsoleAdmin appCfg hLogger
       mapM_ killThread threads
 
 -- | Runs all external fonts that allowed by config 
@@ -44,17 +44,17 @@ runTelegramFront :: AppConfig -> Logger.Handle IO -> IO ()
 runTelegramFront appCfg hLogger = do
    withTelegramAPIHandle appCfg hLogger $ \hAPITg -> do
       let hFront = TelegramHTTP.createHandle hAPITg hLogger
-          hStatus = Status.createHandle hLogger
+          hStatus = Status.createHandle hLogger (getFeedbackAddress appCfg)
       App.runAppSimpleForever App.Handle{..}
 
 -- | Console is a bit special, sice we want to control over app
 -- and it's functional simultaneously.
 -- So this function listens to console input
 -- and runs console front on getStatus command.
-runConsoleAdmin :: Logger.Handle IO -> IO ()
-runConsoleAdmin hLogger = do
+runConsoleAdmin :: AppConfig -> Logger.Handle IO -> IO ()
+runConsoleAdmin appCfg hLogger = do
    let hFront  = ConsoleHTTP.createHandle hLogger
-       hStatus = Status.createHandle hLogger
+       hStatus = Status.createHandle hLogger (getFeedbackAddress appCfg)
    putStrLn "Console bot enabled"
    App.runAppAdmin App.Handle{..}
 

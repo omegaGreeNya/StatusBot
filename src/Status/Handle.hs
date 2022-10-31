@@ -7,11 +7,12 @@ module Status.Handle
     ) where
 
 import Data.ByteString (ByteString)
+import Data.Text (Text)
 
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import PrettyPrint
+import Utils ((.<))
 
 import qualified Logger
 
@@ -30,12 +31,14 @@ data ServerAdress = ServerAdress
    } deriving (Show)
 
 instance PrettyPrint ServerAdress where
-   prettyPrint ServerAdress{..} =
-      (T.decodeUtf8 _host) <> ":" <> (T.pack $ show _port)
+   prettyPrint ServerAdress{..} = (T.decodeUtf8 _host)
 
 data ServerStatus
    = Online
-   | NotAvaible
+   | NotAvaible Text
+   -- ^ Status code/or error message
    deriving (Show, Eq)
 
-instance PrettyPrint ServerStatus
+instance PrettyPrint ServerStatus where
+   prettyPrint (Online) = "online"
+   prettyPrint (NotAvaible status_code) = "not avaible " .< status_code

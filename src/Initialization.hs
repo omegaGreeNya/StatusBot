@@ -10,6 +10,8 @@ module Initialization
    
    , withLoggerConfig
    , withTelegramAPIHandle
+   
+   , getFeedbackAddress
    ) where
 
 import Control.Exception (tryJust)
@@ -57,8 +59,9 @@ data FrontConfig = FrontConfig
 deriveJSON (derivingDrop 4) ''FrontConfig
 
 data AppConfig = AppConfig
-   { cfg_logger :: LoggerConfig
-   , cfg_front  :: FrontConfig
+   { cfg_logger   :: LoggerConfig
+   , cfg_front    :: FrontConfig
+   , cfg_feedback :: Text
    } deriving (Show)
 
 deriveJSON (derivingDrop 4) ''AppConfig
@@ -111,10 +114,14 @@ defaultFrontConfig = FrontConfig
    }
 -- >>
 
+defaultFeedbackAddress :: Text
+defaultFeedbackAddress = "https://t.me/greencake"
+
 defaultAppConfig :: AppConfig
 defaultAppConfig = AppConfig
-   { cfg_logger = defaultLoggerConfig
-   , cfg_front  = defaultFrontConfig
+   { cfg_logger   = defaultLoggerConfig
+   , cfg_front    = defaultFrontConfig
+   , cfg_feedback = defaultFeedbackAddress
    }
 
 -- << Interface
@@ -157,6 +164,9 @@ withTelegramAPIHandle AppConfig{..} hLogger f = do
    let TelegramConfig{..} = cfg_telegram cfg_front
    hAPITg <- API.Telegram.createHandle hLogger cfg_token cfg_timeout
    f hAPITg
+
+getFeedbackAddress :: AppConfig -> Text
+getFeedbackAddress AppConfig{..} = cfg_feedback
 
 -- >>
 
