@@ -23,9 +23,7 @@ import qualified Status.Implementation as Status
 main :: IO ()
 main = do
    appCfg <- initApp
-   print appCfg
    withLoggerConfig appCfg $ \loggerCfg -> do
-      print $ Logger.cfgConnectionHandle loggerCfg
       let hLogger = Logger.createHandle loggerCfg
       threads <- runExternalFronts appCfg hLogger
       if (consoleFrontEnabled appCfg)
@@ -64,9 +62,9 @@ runConsoleFront hLogger = do
        hStatus = Status.createHandle hLogger
    T.putStrLn "Console bot enabled"
    printHelpConsole
-   listenConsoleCommands 
+   listenConsoleCommands -- Dirty hack.
       $ \input -> let hFront = front input in App.Handle{..}
--- Dirty hack.
+
 
 -- | Controlls app throught console input,
 -- and acts as console tool on getStatus command.
@@ -79,7 +77,7 @@ listenConsoleCommands hApp = do
       ("help":_)
          -> printHelpConsole >> listenConsoleCommands hApp
       ("getStatus":rest)
-         -> App.runAppSimple (hApp $ mconcat rest)
+         -> App.runAppSimple (hApp $ T.unwords rest)
          >> listenConsoleCommands hApp
       _
          -> listenConsoleCommands hApp
@@ -101,13 +99,14 @@ listenCommands' =  do
          -> listenCommands'
 
 printHelpConsole :: IO ()
-printHelpConsole =
-   T.putStrLn $ T.unlines 
+printHelpConsole = do
+   printHelpGeneric
+   T.putStr $ T.unlines 
       ["getStatus <IP> - asks for server status."]
 
 printHelpGeneric :: IO ()
 printHelpGeneric =
-   T.putStrLn $ T.unlines 
+   T.putStr $ T.unlines 
       [ "help - prints this message"
       , "stop - to stop app. Note, it may take time to close http calls."
       ]

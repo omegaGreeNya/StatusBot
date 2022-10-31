@@ -1,6 +1,6 @@
 {
   "logger": {
-    "consoleLogging": true,
+    "consoleLogging": false,
     "fileLogging": true,
     "logFile": "Log.txt",
     "logLevel": "DEBUG",
@@ -8,9 +8,9 @@
   },
   "front": {
     "consoleUsage": true,
-    "telegramUsage": false,
+    "telegramUsage": true,
     "telegram": {
-      "token": "",
+      "token": "5616451207:AAFhF_3jKVZrLXpt5yPrS5pTOPAQZpldAak",
       "timeout": 60
     }
   }

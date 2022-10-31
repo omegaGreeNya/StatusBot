@@ -9,6 +9,7 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Network.HTTP.Client (isIpAddress)
 
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import PrettyPrint
@@ -30,7 +31,8 @@ parseAddress
    :: Text
    -> Either ParsingError ServerAdress
 parseAddress text =
-   let adress = T.encodeUtf8 text
+   let textStripped = T.strip text
+       adress = T.encodeUtf8 textStripped
    in if isIpAddress adress
       then Right $ makeHttpAdress adress
       else Left $ AdressParsingError text
