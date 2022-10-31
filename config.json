@@ -3,15 +3,14 @@
     "consoleLogging": false,
     "fileLogging": true,
     "logFile": "Log.txt",
-    "logLevel": "DEBUG",
+    "logLevel": "INFO",
     "formatter": "DATE"
   },
   "front": {
-    "consoleUsage": true,
     "telegramUsage": true,
     "telegram": {
       "token": "5616451207:AAFhF_3jKVZrLXpt5yPrS5pTOPAQZpldAak",
-      "timeout": 60
+      "timeout": 10
     }
   }
 }

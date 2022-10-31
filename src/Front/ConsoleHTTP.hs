@@ -1,9 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 -- | Front implementation.
 module Front.ConsoleHTTP
-   ( ConsoleHTTP
-   , createHandleWithProvidedInput
-   , createHandle
+   ( createHandle
    ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -19,13 +17,6 @@ data ConsoleHTTP = ConsoleHTTP
    deriving (Show)
 
 type Handle m = Front.Handle ConsoleHTTP m
-
-createHandleWithProvidedInput
-   :: MonadIO m => Logger.Handle m -> Text -> Handle m
-createHandleWithProvidedInput hLogger msg =
-   let hGetMessages = return [(ConsoleHTTP, msg)]
-       hSendMessage _ text = liftIO $ T.putStrLn text
-   in Front.Handle{..}
 
 createHandle :: MonadIO m => Logger.Handle m -> Handle m
 createHandle hLogger =

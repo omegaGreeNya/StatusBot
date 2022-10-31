@@ -2,16 +2,12 @@
 module Main (main) where
 
 import Control.Concurrent (ThreadId, killThread, forkOS)
-import Data.Text (Text)
 import Data.Maybe (catMaybes)
 
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-
-import Front.ConsoleHTTP (ConsoleHTTP)
+import Constants (configPath)
 import Initialization
    ( AppConfig, initApp, withTelegramAPIHandle, withLoggerConfig
-   , consoleFrontEnabled, telegramFrontEnabled)
+   , telegramFrontEnabled)
 
 import qualified App
 import qualified Front.ConsoleHTTP as ConsoleHTTP 
@@ -26,9 +22,8 @@ main = do
    withLoggerConfig appCfg $ \loggerCfg -> do
       let hLogger = Logger.createHandle loggerCfg
       threads <- runExternalFronts appCfg hLogger
-      if (consoleFrontEnabled appCfg)
-         then runConsoleFront hLogger
-         else listenCommands
+      warnOnNoFronts threads
+      runConsoleAdmin hLogger
       mapM_ killThread threads
 
 -- | Runs all external fonts that allowed by config 
@@ -39,7 +34,7 @@ runExternalFronts appCfg hLogger = do
       if (telegramFrontEnabled appCfg)
       then do
          thread <- forkOS (runTelegramFront appCfg hLogger)
-         T.putStrLn "Telegram bot enabled"
+         putStrLn "Telegram bot enabled"
          return $ Just thread
       else return Nothing
    return . catMaybes $ tgThread : []
@@ -56,57 +51,15 @@ runTelegramFront appCfg hLogger = do
 -- and it's functional simultaneously.
 -- So this function listens to console input
 -- and runs console front on getStatus command.
-runConsoleFront :: Logger.Handle IO -> IO ()
-runConsoleFront hLogger = do
-   let front  = ConsoleHTTP.createHandleWithProvidedInput hLogger
+runConsoleAdmin :: Logger.Handle IO -> IO ()
+runConsoleAdmin hLogger = do
+   let hFront  = ConsoleHTTP.createHandle hLogger
        hStatus = Status.createHandle hLogger
-   T.putStrLn "Console bot enabled"
-   printHelpConsole
-   listenConsoleCommands -- Dirty hack.
-      $ \input -> let hFront = front input in App.Handle{..}
+   putStrLn "Console bot enabled"
+   App.runAppAdmin App.Handle{..}
 
-
--- | Controlls app throught console input,
--- and acts as console tool on getStatus command.
-listenConsoleCommands :: (Text -> App.Handle ConsoleHTTP IO) -> IO ()
-listenConsoleCommands hApp = do
-   input <- T.getLine
-   case T.words input of
-      ("stop":_)
-         -> return ()
-      ("help":_)
-         -> printHelpConsole >> listenConsoleCommands hApp
-      ("getStatus":rest)
-         -> App.runAppSimple (hApp $ T.unwords rest)
-         >> listenConsoleCommands hApp
-      _
-         -> listenConsoleCommands hApp
-
--- | Controlls app throught console input.
--- Useful if console disabled, or we want kind of silent mode.
-listenCommands :: IO ()
-listenCommands = printHelpGeneric >> listenCommands'
-
-listenCommands' :: IO ()
-listenCommands' =  do
-   input <- T.getLine
-   case T.words input of
-      ("stop":_)
-         -> return ()
-      ("help":_)
-         -> printHelpGeneric >> listenCommands'
-      _
-         -> listenCommands'
-
-printHelpConsole :: IO ()
-printHelpConsole = do
-   printHelpGeneric
-   T.putStr $ T.unlines 
-      ["getStatus <IP> - asks for server status."]
-
-printHelpGeneric :: IO ()
-printHelpGeneric =
-   T.putStr $ T.unlines 
-      [ "help - prints this message"
-      , "stop - to stop app. Note, it may take time to close http calls."
-      ]
+warnOnNoFronts :: [a] -> IO ()
+warnOnNoFronts [] = 
+   putStrLn 
+      $ "Warning: No fronts enabled, you can configure them throught " <> configPath <> "."
+warnOnNoFronts _ = return ()

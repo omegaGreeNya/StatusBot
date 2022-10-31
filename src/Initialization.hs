@@ -6,7 +6,6 @@ module Initialization
    ( AppConfig
    , initApp
    
-   , consoleFrontEnabled
    , telegramFrontEnabled
    
    , withLoggerConfig
@@ -51,8 +50,7 @@ data TelegramConfig = TelegramConfig
 deriveJSON (derivingDrop 4) ''TelegramConfig
 
 data FrontConfig = FrontConfig
-   { cfg_consoleUsage  :: Bool
-   , cfg_telegramUsage :: Bool
+   { cfg_telegramUsage :: Bool
    , cfg_telegram      :: TelegramConfig
    } deriving (Show)
 
@@ -91,9 +89,6 @@ defaultLoggerConfig = LoggerConfig
    }
 -- >> 
 -- << Front default
-defFrontToConsole :: Bool
-defFrontToConsole = True
-
 defFrontToTelegram :: Bool
 defFrontToTelegram = False
 
@@ -111,8 +106,7 @@ defaultTelegramConfig = TelegramConfig
 
 defaultFrontConfig :: FrontConfig
 defaultFrontConfig = FrontConfig
-   { cfg_consoleUsage  = defFrontToConsole
-   , cfg_telegramUsage = defFrontToTelegram
+   { cfg_telegramUsage = defFrontToTelegram
    , cfg_telegram      = defaultTelegramConfig
    }
 -- >>
@@ -148,10 +142,6 @@ withLoggerConfig appCfg f = do
    result <- f logCfg
    Logger.shutdownConfig logCfg
    return result
-
-consoleFrontEnabled :: AppConfig -> Bool
-consoleFrontEnabled AppConfig{..} =
-   cfg_consoleUsage cfg_front
 
 telegramFrontEnabled :: AppConfig -> Bool
 telegramFrontEnabled AppConfig{..} =
