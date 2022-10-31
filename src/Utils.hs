@@ -3,8 +3,6 @@
 module Utils
    ( derivingDrop
    
-   , getCurrentTimeHiRes
-   
    , packQVal
    
    , (.<~)
@@ -13,10 +11,8 @@ module Utils
    , (>.)
    ) where
 
-import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson.TH (Options (..), defaultOptions)
 import Data.Text (Text)
-import Data.Time.Clock.System (getSystemTime)
 
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Text as T
@@ -50,14 +46,7 @@ derivingDrop n = defaultOptions {fieldLabelModifier = drop n}
 
 -- >>
 
--- << Hi-Res Time
-
-getCurrentTimeHiRes :: MonadIO m => m Int
-getCurrentTimeHiRes = undefined
-
--- >>
-
--- << 
+-- << HTTP Queries
 
 -- | Type class for easy, dead-brain encoding ByteStrings
 class ToByteString a where

@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main (main) where
 
 import Control.Concurrent (ThreadId, killThread, forkOS)
@@ -7,11 +8,12 @@ import Data.Maybe (catMaybes)
 import Initialization
    ( AppConfig, initApp, withTelegramAPIHandle, withLoggerConfig
    , consoleFrontEnabled, telegramFrontEnabled)
-import App (runAppSimpleForever)
 
-import qualified Logger --(Config, createHandle)
+import qualified App
 import qualified Front.ConsoleHTTP as ConsoleHTTP (createHandle) 
 import qualified Front.TelegramHTTP as TelegramHTTP (createHandle)
+import qualified Logger
+import qualified Status.Implementation as Status
 
 
 main :: IO ()
@@ -36,15 +38,17 @@ runAllFronts appCfg loggerCfg = do
 runConsoleFront :: Logger.Config IO -> IO ()
 runConsoleFront loggerCfg = do
    let hLogger = Logger.createHandle loggerCfg
-       hConsole = ConsoleHTTP.createHandle hLogger
-   runAppSimpleForever hConsole
+       hFront = ConsoleHTTP.createHandle hLogger
+       hStatus = Status.createHandle hLogger
+   App.runAppSimpleForever App.Handle{..}
 
 runTelegramFront :: AppConfig -> Logger.Config IO -> IO ()
-runTelegramFront appCfg loggerCfg =
-   withTelegramAPIHandle appCfg $ \hAPITg -> do
-      let hLogger = Logger.createHandle loggerCfg
-          hTelegram = TelegramHTTP.createHandle hAPITg hLogger
-      runAppSimpleForever hTelegram
+runTelegramFront appCfg loggerCfg = do
+   let hLogger = Logger.createHandle loggerCfg
+   withTelegramAPIHandle appCfg hLogger $ \hAPITg -> do
+      let hFront = TelegramHTTP.createHandle hAPITg hLogger
+          hStatus = Status.createHandle hLogger
+      App.runAppSimpleForever App.Handle{..}
 
 listenCommands :: IO ()
 listenCommands = do

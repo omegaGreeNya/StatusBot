@@ -9,30 +9,19 @@ module Status.Implementation
 
 import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.ByteString (ByteString)
 import Network.HTTP.Client (HttpException)
 import Network.HTTP.Simple
    ( Request, httpNoBody, getResponseStatus
    , setRequestHost, setRequestPort, defaultRequest)
 import Network.HTTP.Types (Status(..))
 
-import Status.Handle (ServerStatus(..))
+import Status.Handle (Handle(..), ServerAdress(..), ServerStatus(..))
 
 import qualified Logger (Handle)
-import qualified Status.Handle as H (Handle(..))
-
-
-type Handle m = H.Handle ServerAdress m
-
-data ServerAdress = ServerAdress
-   { _host :: ByteString
-   , _port :: Int
-   } deriving (Show)
-
 
 -- | Creates handle implementation.
 createHandle :: MonadIO m => Logger.Handle m -> Handle m
-createHandle logger = H.Handle logger getStatusRaw
+createHandle logger = Handle logger getStatusRaw
 
 -- << Implementation
 

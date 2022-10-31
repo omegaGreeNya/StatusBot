@@ -6,7 +6,7 @@ module API.Telegram
    , createHandle
    , getUpdates
    , parseMessageUpdates
-   , sendAnswer
+   , sendMessage
    ) where
 
 import Control.Lens (toListOf)
@@ -16,7 +16,7 @@ import Data.ByteString.Char8 (ByteString)
 import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.Text (Text)
 import Network.HTTP.Simple 
-   ( Response, Request, defaultRequest, getResponseBody, httpBS
+   ( Response, Request, defaultRequest, getResponseBody
    , setRequestMethod, setRequestHost, setRequestSecure
    , setRequestPath, setRequestPort, setRequestQueryString)
 
@@ -24,9 +24,13 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text.Encoding as T
 
 import Utils (packQVal)
+import Utils.Exceptions (safeHttpBS)
+
+import qualified Logger
 
 data Handle m = Handle
-   { hToken     :: Text
+   { hLogger    :: Logger.Handle m
+   , hToken     :: Text
    , hTimeout   :: Int
    , hGetOffset :: m Int
    , hSetOffset :: Int -> m ()
@@ -37,8 +41,8 @@ type TelegramUser = Int
 -- << Interface
 
 -- | Creates simple Handle with IORef holding current offset.
-createHandle :: MonadIO m => Text -> Int -> m (Handle m)
-createHandle hToken hTimeout = do
+createHandle :: MonadIO m => Logger.Handle m -> Text -> Int -> m (Handle m)
+createHandle hLogger hToken hTimeout = do
    offsetRef <- liftIO $ newIORef 0
    let hGetOffset = liftIO $ readIORef offsetRef
    let hSetOffset offset = liftIO $ writeIORef offsetRef offset
@@ -47,12 +51,15 @@ createHandle hToken hTimeout = do
 -- | Gets updates from telegram API.
 -- https://core.telegram.org/bots/api#getupdates
 getUpdates :: MonadIO m => Handle m -> m (Maybe BS.ByteString)
-getUpdates h = do
+getUpdates h@Handle{..} = do
    request <- getUpdatesRequest h
-   res <- liftIO $ httpBS request
-   let response = getResponseBody res
-   updateOffset h response
-   return response
+   mRes <- safeHttpBS hLogger request
+   case mRes of 
+      Nothing -> return Nothing
+      Just res -> do
+      let response = getResponseBody res
+      updateOffset h response
+      return $ Just response
 
 -- | Parses raw json list of telegram Update
 -- to users and their message texts.
@@ -70,10 +77,10 @@ parseMessageUpdates json = let
 -- | Posts message to given chat_id.
 -- Returns posted message.
 -- https://core.telegram.org/bots/api#sendmessage
-sendAnswer :: MonadIO m => Handle m -> TelegramUser -> Text -> m (Response ByteString)
-sendAnswer h chat_id msg = do
+sendMessage :: MonadIO m => Handle m -> TelegramUser -> Text -> m (Maybe (Response ByteString))
+sendMessage h@Handle{..} chat_id msg = do
    let request = sendMessageRequest h chat_id msg
-   httpBS request
+   safeHttpBS hLogger request
 
 
 -- >>

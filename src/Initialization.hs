@@ -158,10 +158,14 @@ telegramFrontEnabled AppConfig{..} =
    cfg_telegramUsage cfg_front
 
 withTelegramAPIHandle
-   :: MonadIO m => AppConfig -> (API.Telegram.Handle m -> m a) -> m a
-withTelegramAPIHandle AppConfig{..} f = do
+   :: MonadIO m
+   => AppConfig
+   -> Logger.Handle m
+   -> (API.Telegram.Handle m -> m a)
+   -> m a
+withTelegramAPIHandle AppConfig{..} hLogger f = do
    let TelegramConfig{..} = cfg_telegram cfg_front
-   hAPITg <- API.Telegram.createHandle cfg_token cfg_timeout
+   hAPITg <- API.Telegram.createHandle hLogger cfg_token cfg_timeout
    f hAPITg
 
 -- >>

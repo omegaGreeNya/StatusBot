@@ -39,6 +39,7 @@ library
       Status.Handle
       Status.Implementation
       Utils
+      Utils.Exceptions
   other-modules:
       Paths_StatusBot
   hs-source-dirs:

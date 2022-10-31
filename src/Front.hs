@@ -2,19 +2,43 @@
 -- | Module defines generic front use.
 module Front
    ( Handle
-   , runFrontOnce
+   , getMessages
+   , sendMessage
    ) where
 
 import Control.Monad.IO.Class (MonadIO)
+import Data.Text (Text)
 
-import Status (ServerStatus)
 import Logger (logInfo)
-import Utils ((.<),(>.))
+import Utils ((.<))
 
 import Front.Handle (Handle(..))
-import qualified Logger
-import qualified Status
 
+getMessages
+   :: (MonadIO m, Show user)
+   => Handle user m
+   -> m [(user, Text)]
+getMessages Handle{..} = do
+   msgs <- hGetMessages
+   mapM_ logMessage msgs
+   return msgs
+   where
+      logMessage (user, msg) =
+         logInfo hLogger
+            $ "User " .< user <> " sended: " <> msg
+
+sendMessage
+   :: (MonadIO m, Show user)
+   => Handle user m
+   -> user
+   -> Text
+   -> m ()
+sendMessage Handle{..} user msg = do
+   logInfo hLogger
+      $ "Sending \"" <> msg <> "\" to user: " .< user
+   hSendMessage user msg
+
+{-
 -- | Asks for adresses, makes servers status calls,
 -- sends results back to users.
 -- This function intented to be used repeatedly.
@@ -57,3 +81,4 @@ sendAnswers Handle{..} (user, adress, status) =
    hSendAnswer user adress status
 
 -- >>
+-}
