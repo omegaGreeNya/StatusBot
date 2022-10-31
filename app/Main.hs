@@ -2,16 +2,20 @@
 module Main (main) where
 
 import Control.Concurrent (ThreadId, killThread, forkOS)
-import Control.Monad (when)
+import Data.Text (Text)
 import Data.Maybe (catMaybes)
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+
+import Front.ConsoleHTTP (ConsoleHTTP)
 import Initialization
    ( AppConfig, initApp, withTelegramAPIHandle, withLoggerConfig
    , consoleFrontEnabled, telegramFrontEnabled)
 
 import qualified App
-import qualified Front.ConsoleHTTP as ConsoleHTTP (createHandle) 
-import qualified Front.TelegramHTTP as TelegramHTTP (createHandle)
+import qualified Front.ConsoleHTTP as ConsoleHTTP 
+import qualified Front.TelegramHTTP as TelegramHTTP
 import qualified Logger
 import qualified Status.Implementation as Status
 
@@ -22,37 +26,88 @@ main = do
    print appCfg
    withLoggerConfig appCfg $ \loggerCfg -> do
       print $ Logger.cfgConnectionHandle loggerCfg
-      threads <- runAllFronts appCfg loggerCfg
-      listenCommands
+      let hLogger = Logger.createHandle loggerCfg
+      threads <- runExternalFronts appCfg hLogger
+      if (consoleFrontEnabled appCfg)
+         then runConsoleFront hLogger
+         else listenCommands
       mapM_ killThread threads
 
-runAllFronts :: AppConfig -> Logger.Config IO -> IO [ThreadId]
-runAllFronts appCfg loggerCfg = do
-   tgThread <- if (telegramFrontEnabled appCfg)
-               then fmap Just $ forkOS (runTelegramFront appCfg loggerCfg)
-               else return Nothing
-   when (consoleFrontEnabled appCfg)
-      $ runConsoleFront loggerCfg
+-- | Runs all external fonts that allowed by config 
+-- in separate IO thread. Returns their thread ids.
+runExternalFronts :: AppConfig -> Logger.Handle IO -> IO [ThreadId]
+runExternalFronts appCfg hLogger = do
+   tgThread <-
+      if (telegramFrontEnabled appCfg)
+      then do
+         thread <- forkOS (runTelegramFront appCfg hLogger)
+         T.putStrLn "Telegram bot enabled"
+         return $ Just thread
+      else return Nothing
    return . catMaybes $ tgThread : []
 
-runConsoleFront :: Logger.Config IO -> IO ()
-runConsoleFront loggerCfg = do
-   let hLogger = Logger.createHandle loggerCfg
-       hFront = ConsoleHTTP.createHandle hLogger
-       hStatus = Status.createHandle hLogger
-   App.runAppSimpleForever App.Handle{..}
-
-runTelegramFront :: AppConfig -> Logger.Config IO -> IO ()
-runTelegramFront appCfg loggerCfg = do
-   let hLogger = Logger.createHandle loggerCfg
+-- | Runs telegram front in forever loop.
+runTelegramFront :: AppConfig -> Logger.Handle IO -> IO ()
+runTelegramFront appCfg hLogger = do
    withTelegramAPIHandle appCfg hLogger $ \hAPITg -> do
       let hFront = TelegramHTTP.createHandle hAPITg hLogger
           hStatus = Status.createHandle hLogger
       App.runAppSimpleForever App.Handle{..}
 
+-- | Console is a bit special, sice we want to control over app
+-- and it's functional simultaneously.
+-- So this function listens to console input
+-- and runs console front on getStatus command.
+runConsoleFront :: Logger.Handle IO -> IO ()
+runConsoleFront hLogger = do
+   let front  = ConsoleHTTP.createHandleWithProvidedInput hLogger
+       hStatus = Status.createHandle hLogger
+   T.putStrLn "Console bot enabled"
+   printHelpConsole
+   listenConsoleCommands 
+      $ \input -> let hFront = front input in App.Handle{..}
+-- Dirty hack.
+
+-- | Controlls app throught console input,
+-- and acts as console tool on getStatus command.
+listenConsoleCommands :: (Text -> App.Handle ConsoleHTTP IO) -> IO ()
+listenConsoleCommands hApp = do
+   input <- T.getLine
+   case T.words input of
+      ("stop":_)
+         -> return ()
+      ("help":_)
+         -> printHelpConsole >> listenConsoleCommands hApp
+      ("getStatus":rest)
+         -> App.runAppSimple (hApp $ mconcat rest)
+         >> listenConsoleCommands hApp
+      _
+         -> listenConsoleCommands hApp
+
+-- | Controlls app throught console input.
+-- Useful if console disabled, or we want kind of silent mode.
 listenCommands :: IO ()
-listenCommands = do
-   input <- getLine
-   case input of
-      "stop" -> return ()
-      _      -> listenCommands
+listenCommands = printHelpGeneric >> listenCommands'
+
+listenCommands' :: IO ()
+listenCommands' =  do
+   input <- T.getLine
+   case T.words input of
+      ("stop":_)
+         -> return ()
+      ("help":_)
+         -> printHelpGeneric >> listenCommands'
+      _
+         -> listenCommands'
+
+printHelpConsole :: IO ()
+printHelpConsole =
+   T.putStrLn $ T.unlines 
+      ["getStatus <IP> - asks for server status."]
+
+printHelpGeneric :: IO ()
+printHelpGeneric =
+   T.putStrLn $ T.unlines 
+      [ "help - prints this message"
+      , "stop - to stop app. Note, it may take time to close http calls."
+      ]

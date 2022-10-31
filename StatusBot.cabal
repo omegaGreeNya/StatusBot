@@ -35,6 +35,8 @@ library
       Initialization
       Logger
       Logger.Handle
+      Parsing
+      PrettyPrint
       Status
       Status.Handle
       Status.Implementation

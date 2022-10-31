@@ -1,8 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
--- | App
+-- | App behavior defined here.
 module App
    ( Handle(..)
    , runAppSimpleForever
+   , runAppSimple
    ) where
 
 import Control.Concurrent (threadDelay)
@@ -10,7 +11,8 @@ import Control.Monad (forever)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text)
 
-import Utils ((.<))
+import PrettyPrint
+import Parsing (parseAddress)
 
 import qualified Front as Front
 import qualified Logger as Logger
@@ -27,11 +29,16 @@ runAppSimpleForever
    :: (MonadIO m, Show user)
    => Handle user m
    -> m ()
-runAppSimpleForever h@Handle{..} =
-   forever $ do
-      userMessages <- Front.getMessages hFront
-      mapM_ (uncurry (processUserMessage h)) userMessages
-      liftIO $ threadDelay 100000
+runAppSimpleForever h = forever $ runAppSimple h
+
+runAppSimple
+   :: (MonadIO m, Show user)
+   => Handle user m
+   -> m ()
+runAppSimple h@Handle{..} = do
+   userMessages <- Front.getMessages hFront
+   mapM_ (uncurry (processUserMessage h)) userMessages
+   liftIO $ threadDelay 100000 -- 0.1 sec
 
 processUserMessage
    :: (MonadIO m, Show user)
@@ -40,12 +47,15 @@ processUserMessage
    -> Text
    -> m ()
 processUserMessage Handle{..} user text = do
-   let eAdress = Status.parseAdress text
+   let eAdress = parseAddress text
    case eAdress of
       Left parseErr -> 
          Front.sendMessage hFront user
-            $ "" .< parseErr
-      Right adress -> do
-         serverStatus <- Status.getStatus hStatus adress
+            $ prettyPrint parseErr
+      Right address -> do
+         serverStatus <- Status.getStatus hStatus address
          Front.sendMessage hFront user
-            $ "Server " .< adress <> " is " .< serverStatus
+            $ "Server " 
+            <> (prettyPrint address)
+            <> " is "
+            <> (prettyPrint serverStatus)

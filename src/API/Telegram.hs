@@ -57,9 +57,9 @@ getUpdates h@Handle{..} = do
    case mRes of 
       Nothing -> return Nothing
       Just res -> do
-      let response = getResponseBody res
-      updateOffset h response
-      return $ Just response
+         let json = getResponseBody res
+         updateOffset h json
+         return $ Just json
 
 -- | Parses raw json list of telegram Update
 -- to users and their message texts.
