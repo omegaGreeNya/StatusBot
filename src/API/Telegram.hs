@@ -36,7 +36,9 @@ data Handle m = Handle
    , hSetOffset :: Int -> m ()
    }
 
-type TelegramUser = Int
+newtype TelegramUser = TelegramUser Int
+instance Show TelegramUser where
+   show (TelegramUser x) = "TelegramUser " <> (show x)
 
 -- << Interface
 
@@ -67,7 +69,7 @@ parseMessageUpdates :: BS.ByteString -> [(TelegramUser, Text)]
 parseMessageUpdates json = let
    messages = toListOf (key "result" . _Array . traverse . key "message") json
    
-   users = map fromIntegral 
+   users = map (TelegramUser . fromIntegral)
          $ toListOf (traverse . key "chat" . key "id" . _Integer) messages
    
    adresses = toListOf (traverse . key "text" . _String) messages
@@ -78,8 +80,8 @@ parseMessageUpdates json = let
 -- Returns posted message.
 -- https://core.telegram.org/bots/api#sendmessage
 sendMessage :: MonadIO m => Handle m -> TelegramUser -> Text -> m (Maybe (Response ByteString))
-sendMessage h@Handle{..} chat_id msg = do
-   let request = sendMessageRequest h chat_id msg
+sendMessage h@Handle{..} user msg = do
+   let request = sendMessageRequest h user msg
    safeHttpBS hLogger request
 
 
@@ -116,7 +118,7 @@ telegramRequest Handle{..} method = setRequestSecure True
 
 -- | Telegram sendMessage method request.
 sendMessageRequest :: Handle m -> TelegramUser -> Text -> Request
-sendMessageRequest h chat_id msg  =
+sendMessageRequest h (TelegramUser chat_id) msg  =
    setRequestMethod "POST" -- actually not necessary for telegram
    $ setRequestQueryString
       [ ("chat_id", packQVal chat_id)

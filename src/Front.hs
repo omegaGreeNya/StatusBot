@@ -10,7 +10,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 
 import Logger (logInfo)
-import Utils ((.<))
+import Utils ((.<),(>.))
 
 import Front.Handle (Handle(..))
 
@@ -25,7 +25,7 @@ getMessages Handle{..} = do
    where
       logMessage (user, msg) =
          logInfo hLogger
-            $ "User " .< user <> " sended: " <> msg
+            $ user >. " sended: " <> msg
 
 sendMessage
    :: (MonadIO m, Show user)

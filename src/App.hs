@@ -105,8 +105,8 @@ sendHelp
    -> m ()
 sendHelp Handle{..} user =
    Front.sendMessage hFront user
-      $ T.unlines
-      [ "help - prints this message"
-      , "stop - to stop app. Note, it may take time to close http calls."
+      $ T.init $ T.unlines -- init to drop last '\n' symbol
+      [ "help           - prints this message"
+      , "stop           - to stop app. Note, it may take time to close http calls."
       , "getStatus <IP> - asks for server status."
       ]
