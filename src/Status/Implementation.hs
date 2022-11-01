@@ -18,7 +18,7 @@ import Network.HTTP.Types (Status(..))
 
 import qualified Data.Text as T
 
-import Logger (logDebug)
+import Logger (logDebug, logError)
 import Status.Handle (Handle(..), ServerAdress(..), ServerStatus(..))
 import Utils ((.<))
 
@@ -46,16 +46,18 @@ httpExceptionToServerStatus _ _ (InvalidUrlException _ msg) =
    return $ NotAvaible $ T.pack msg
 httpExceptionToServerStatus hLogger feedbackAddress exception@(HttpExceptionRequest _ err) = do
    logDebug hLogger (T.pack $ show exception)
-   return . NotAvaible $ case err of
+   case err of
       ConnectionFailure _
-         -> "connection failure (Address is probably malformed)"
+         -> return . NotAvaible $ "connection failure (Address is probably malformed)"
       ConnectionTimeout
-         -> "connection timeout"
+         -> return . NotAvaible $ "connection timeout"
       ResponseTimeout
-         -> "response timeout"
+         -> return . NotAvaible $ "response timeout"
       TooManyRedirects _
-         -> "too many redirects"
-      _  -> "Internal bot error, please contact " <> feedbackAddress
+         -> return . NotAvaible $ "too many redirects"
+      _  -> do
+         logError hLogger (T.pack $ show exception)
+         return . NotAvaible $ "Internal bot error, please contact " <> feedbackAddress
       
 
 -- | Translates Http response status into server status.
