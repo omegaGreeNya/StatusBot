@@ -12,18 +12,25 @@ import Initialization
 import qualified App
 import qualified Front.ConsoleHTTP as ConsoleHTTP 
 import qualified Front.TelegramHTTP as TelegramHTTP
-import qualified Logger
+import qualified Logger.Implementation as Logger
 import qualified Status.Implementation as Status
 
 
 main :: IO ()
 main = do
+   -- Initialization
    appCfg <- initApp
    withLoggerConfig appCfg $ \loggerCfg -> do
       let hLogger = Logger.createHandle loggerCfg
+      
+      -- Running fronts in separate threads
       threads <- runExternalFronts appCfg hLogger
       warnOnNoFronts threads
+      
+      -- Running admin console until stop command
       runConsoleAdmin appCfg hLogger
+      
+      -- Shutdown launched threads and we done
       mapM_ killThread threads
 
 -- | Runs all external fonts that allowed by config 
@@ -58,8 +65,11 @@ runConsoleAdmin appCfg hLogger = do
    putStrLn "Console bot enabled"
    App.runAppAdmin App.Handle{..}
 
+-- | Warns user (console) on empty list of ThreadId's.
 warnOnNoFronts :: [a] -> IO ()
 warnOnNoFronts [] = 
    putStrLn 
-      $ "Warning: No fronts enabled, you can configure them throught " <> configPath <> "."
-warnOnNoFronts _ = return ()
+      $ "Warning: No fronts enabled, you can configure them throught "
+      <> configPath <> "."
+warnOnNoFronts _ =
+   return ()

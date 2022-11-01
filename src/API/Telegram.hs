@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards   #-}
--- | Front implementation.
+{-# LANGUAGE RecordWildCards #-}
+-- | Module defines calls to telegram API.
 module API.Telegram
    ( Handle (..)
    , TelegramUser
@@ -31,9 +31,14 @@ import qualified Logger
 data Handle m = Handle
    { hLogger    :: Logger.Handle m
    , hToken     :: Text
+   -- ^ Bot tokken
    , hTimeout   :: Int
+   -- ^ Time in seconds for long polling (0 - for short).
    , hGetOffset :: m Int
+   -- ^ Returns minimal telegram update_id we want to get
+   -- on getUpdates method calls.
    , hSetOffset :: Int -> m ()
+   -- ^ Updates getUpdates offset query parametr.
    }
 
 newtype TelegramUser = TelegramUser Int

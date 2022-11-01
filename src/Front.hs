@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Module defines generic front use.
+-- | Module defines front usage for mid-layer part of app.
 module Front
    ( Handle
    , getMessages
@@ -14,6 +14,8 @@ import Utils ((.<),(>.))
 
 import Front.Handle (Handle(..))
 
+-- | Asks front for messages and returns resulted list
+-- of users and their messages. Logs this action.
 getMessages
    :: (MonadIO m, Show user)
    => Handle user m
@@ -27,6 +29,7 @@ getMessages Handle{..} = do
          logInfo hLogger
             $ user >. " sended: " <> msg
 
+-- | Send given text to specified user. Logs this action.
 sendMessage
    :: (MonadIO m, Show user)
    => Handle user m

@@ -1,5 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
--- | Different funtions to make life easier.
+-- | Functions for parsing user input defined here.
 module Parsing
    ( parseAddress
    ) where
@@ -14,6 +13,7 @@ import qualified Data.Text.Encoding as T
 import PrettyPrint
 import Status (ServerAdress(..))
 
+-- | "God"-ADT for parsing errors.
 data ParsingError 
    = AdressParsingError Text
    -- | WhateverParsingError
@@ -24,6 +24,7 @@ instance PrettyPrint ParsingError where
       "\"" <> parsedText <> "\" can't be parse as site or ip." 
 
 
+-- | Tries to parse given text as ip/site adress.
 parseAddress
    :: Text
    -> Either ParsingError ServerAdress

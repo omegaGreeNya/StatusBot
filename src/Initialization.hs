@@ -24,13 +24,14 @@ import System.IO (IOMode(..), openFile)
 import System.IO.Error (isDoesNotExistError)
 
 import qualified Data.ByteString.Lazy.Char8 as BC
+import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified System.IO as File (Handle)
 
 import Constants (configPath)
 import Utils (derivingDrop)
 
-import qualified Logger
+import qualified Logger.Implementation as Logger
 import qualified API.Telegram
 
 
@@ -150,10 +151,14 @@ withLoggerConfig appCfg f = do
    Logger.shutdownConfig logCfg
    return result
 
+-- | Return true then config says that
+-- telegram front should be enabled.
 telegramFrontEnabled :: AppConfig -> Bool
 telegramFrontEnabled AppConfig{..} =
    cfg_telegramUsage cfg_front
 
+-- | Provides telegram api handle to funtion.
+-- Important, it doesn't checks it's enabled or not.
 withTelegramAPIHandle
    :: MonadIO m
    => AppConfig
@@ -165,6 +170,7 @@ withTelegramAPIHandle AppConfig{..} hLogger f = do
    hAPITg <- API.Telegram.createHandle hLogger cfg_token cfg_timeout
    f hAPITg
 
+-- | Returns specified in 'AppConfig' feedback address.
 getFeedbackAddress :: AppConfig -> Text
 getFeedbackAddress AppConfig{..} = cfg_feedback
 
@@ -213,7 +219,7 @@ createLogFileHandle path = liftIO $ openFile path AppendMode
 
 -- | Parses config log level field into logger min log level.
 pickLogLevel :: MonadIO m => Text -> m Logger.LogLevel
-pickLogLevel txt 
+pickLogLevel txt'
    | txt == "DEBUG" = return Logger.DEBUG
    | txt == "INFO" = return Logger.INFO
    | txt == "WARN" = return Logger.WARN
@@ -224,12 +230,13 @@ pickLogLevel txt
          <> txt
          <> "\"."
          <> defLogLevel
-         <> " would be used intead."
+         <> " would be used intead. Abaible logging levels is: DEBUG/INFO/WARN/ERROR"
       pickLogLevel defLogLevel
+   where txt = T.toUpper txt'
 
 -- | Parses config formatter field into logger formatter.
 pickFormatter :: MonadIO m => Text -> m (Logger.Formatter m)
-pickFormatter txt
+pickFormatter txt'
    | txt == "DATE" = return Logger.dateFormating
    | txt == "SIMPLE" = return Logger.simpleFormatting
    | txt == "NO_FORMATTING" = return Logger.noFormatting
@@ -239,7 +246,7 @@ pickFormatter txt
          <> txt
          <> "\"."
          <> defLogFormatter
-         <> " would be used intead."
+         <> " would be used intead. Avaible formatting options is: DATE/SIMPLE/NO_FORMATTING"
       pickFormatter defLogFormatter
-
+   where txt = T.toUpper txt'
 -- >>

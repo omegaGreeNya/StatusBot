@@ -1,5 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
--- | App behavior defined here.
+-- | Mid-layer of the app, there defined app behavior
+-- in terms of sub-parts interfaces/hanldes. 
+-- May be reffered as buisness logic module.
 module App
    ( Handle(..)
    , runAppSimpleForever
@@ -57,12 +59,12 @@ runAppAdmin h@Handle{..} = do
             ("stop":_)
                -> return ()
             ("help":_)
-               -> sendHelp h user >> processMessages msgs 
+               -> sendHelpAdmin h user >> processMessages msgs 
             ("getStatus":rest)
                -> processStatusCommand h user (T.unwords rest)
                >> processMessages msgs 
             _
-               -> sendHint h user message
+               -> sendHintAdmin h user message
                >> processMessages msgs
    processMessages userMessages
 
@@ -88,22 +90,24 @@ processStatusCommand Handle{..} user text = do
             <> " is "
             <> (prettyPrint serverStatus)
 
-sendHint
+-- | Sends admin hint message to user.
+sendHintAdmin
    :: (MonadIO m, Show user)
    => Handle user m
    -> user
    -> Text
    -> m ()
-sendHint Handle{..} user unknownCommand =
+sendHintAdmin Handle{..} user unknownCommand =
    Front.sendMessage hFront user
       $ unknownCommand >. " is not valid command, use \"help\" to get commands list"
 
-sendHelp
+-- | Sends admin help message to user.
+sendHelpAdmin
    :: (MonadIO m, Show user)
    => Handle user m
    -> user
    -> m ()
-sendHelp Handle{..} user =
+sendHelpAdmin Handle{..} user =
    Front.sendMessage hFront user
       $ T.init $ T.unlines -- init to drop last '\n' symbol
       [ "help           - prints this message"

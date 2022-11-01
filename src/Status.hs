@@ -1,7 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Moodule defines implementation of status handle functions.
-
--- Move parsing in separate module?
+-- | Moodule defines Status calls interface for
+-- buisness logic/mid-layer of the app.
 module Status
     ( Handle
     , ServerAdress(..)

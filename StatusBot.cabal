@@ -10,7 +10,7 @@ description:    Please see the README on GitHub at <https://github.com/OmegaGree
 homepage:       https://github.com/OmegaGreeNya/StatusBot#readme
 bug-reports:    https://github.com/OmegaGreeNya/StatusBot/issues
 author:         GreenCake (Nikolai)
-maintainer:     megamancake@yandex.ru
+maintainer:     https://t.me/greencake
 copyright:      2022 GreenCake (Nikolai)
 license:        BSD3
 license-file:   LICENSE
@@ -35,6 +35,7 @@ library
       Initialization
       Logger
       Logger.Handle
+      Logger.Implementation
       Parsing
       PrettyPrint
       Status
@@ -68,30 +69,6 @@ executable StatusBot-exe
       Paths_StatusBot
   hs-source-dirs:
       app
-  default-extensions:
-      OverloadedStrings
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      StatusBot
-    , aeson
-    , base >=4.7 && <5
-    , bytestring
-    , http-client
-    , http-conduit
-    , http-types
-    , lens
-    , lens-aeson
-    , text
-    , time
-  default-language: Haskell2010
-
-test-suite StatusBot-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_StatusBot
-  hs-source-dirs:
-      test
   default-extensions:
       OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N

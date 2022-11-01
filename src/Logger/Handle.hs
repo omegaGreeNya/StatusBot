@@ -1,31 +1,24 @@
--- | Logger interface.
+-- | Inner module. Defines Logger handle and log message levels.
 module Logger.Handle
     ( Handle(..)
     , LogLevel(..)
-    , logDebug
-    , logInfo
-    , logWarning
-    , logError
     ) where
 
 import Data.Text (Text)
 
+-- | Logger handle.
 data Handle m = Handle
    { hLogMessage :: LogLevel -> Text -> m ()
    -- ^ Actual implementation abstracted
    -- behind this function.
    }
 
+-- | Logs can be presented with different levels
+-- hLogMessage may be implimented to suppres some levels
+-- or to markdown messages diferenly, or even to rise an exception.
 data LogLevel
    = DEBUG
    | INFO
    | WARN
    | ERROR
    deriving (Show, Eq, Ord)
-
--- | Logging aliases.
-logDebug, logInfo, logWarning, logError :: Handle m -> Text -> m ()
-logDebug   h = hLogMessage h DEBUG
-logInfo    h = hLogMessage h INFO
-logWarning h = hLogMessage h WARN
-logError   h = hLogMessage h ERROR

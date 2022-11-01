@@ -1,5 +1,5 @@
 {-# LANGUAGE DefaultSignatures #-}
--- | Different funtions to make life easier.
+-- | Different funtions to handle unsafe funtions.
 module Utils.Exceptions
    ( safeHttpBS
    ) where

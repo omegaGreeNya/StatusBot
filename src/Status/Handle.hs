@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Module difenes bot logic.
+-- | Inner module. Defines Status Handle and data types for
+-- making http calls to given adress.
 module Status.Handle
     ( Handle(..)
     , ServerAdress(..)
@@ -21,18 +22,21 @@ data Handle m = Handle
    { hLogger :: Logger.Handle m
    -- ^ Injected logger handle.
    , hGetStatus :: ServerAdress -> m ServerStatus
-   -- ^ Logic is abstracted from actual
-   -- implementation of this function.
+   -- ^ Provides status of given adress.
    }
 
+-- | Input data for status calls.
 data ServerAdress = ServerAdress
    { _host :: ByteString
+   -- ^ IP/site.
    , _port :: Int
+   -- ^ Could be any port.
    } deriving (Show)
 
 instance PrettyPrint ServerAdress where
    prettyPrint ServerAdress{..} = (T.decodeUtf8 _host)
 
+-- | Output data for status calls.
 data ServerStatus
    = Online
    | NotAvaible Text

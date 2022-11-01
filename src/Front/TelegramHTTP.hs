@@ -1,8 +1,5 @@
 {-# LANGUAGE RecordWildCards   #-}
--- | Front implementation.
-
--- TO-DO
--- Add user input validation.
+-- | Telegram front implementation.
 module Front.TelegramHTTP
    ( createHandle
    ) where
@@ -14,11 +11,12 @@ import API.Telegram (TelegramUser)
 
 import qualified API.Telegram as API
 import qualified Front.Handle as Front
-import qualified Logger.Handle as Logger
+import qualified Logger as Logger
 
 
 type Handle m = Front.Handle TelegramUser m
 
+-- | Cretes Telegram front handle.
 createHandle :: MonadIO m => API.Handle m -> Logger.Handle m -> Handle m
 createHandle hAPI hLogger =
    let hGetMessages = pollMessages hAPI

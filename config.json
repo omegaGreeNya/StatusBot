@@ -7,9 +7,9 @@
     "formatter": "DATE"
   },
   "front": {
-    "telegramUsage": true,
+    "telegramUsage": false,
     "telegram": {
-      "token": "5616451207:AAFhF_3jKVZrLXpt5yPrS5pTOPAQZpldAak",
+      "token": "",
       "timeout": 10
     }
   },

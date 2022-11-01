@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
--- | Moodule defines implementation of status handle functions.
+-- | Moodule provides implementation of Status.Handle,
+-- actual Handle Data Constructor hided behind createHandle.
 module Status.Implementation
    ( Handle
    , ServerAdress(..)
@@ -9,11 +10,10 @@ module Status.Implementation
 
 import Control.Exception (try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Text
+import Data.Text (Text)
 import Network.HTTP.Client (HttpException(..), HttpExceptionContent(..))
 import Network.HTTP.Simple
-   ( Request, httpNoBody, getResponseStatus
-   , setRequestHost, setRequestPort, defaultRequest)
+   (Request, httpNoBody, getResponseStatus, setRequestHost, setRequestPort, defaultRequest)
 import Network.HTTP.Types (Status(..))
 
 import qualified Data.Text as T
@@ -46,16 +46,16 @@ httpExceptionToServerStatus _ _ (InvalidUrlException _ msg) =
    return $ NotAvaible $ T.pack msg
 httpExceptionToServerStatus hLogger feedbackAddress exception@(HttpExceptionRequest _ err) = do
    logDebug hLogger (T.pack $ show exception)
-   return $ case err of
+   return . NotAvaible $ case err of
       ConnectionFailure _
-         -> NotAvaible "connection failure (Address is probably malformed)"
+         -> "connection failure (Address is probably malformed)"
       ConnectionTimeout
-         -> NotAvaible "connection timeout"
+         -> "connection timeout"
       ResponseTimeout
-         -> NotAvaible "response timeout"
+         -> "response timeout"
       TooManyRedirects _
-         -> NotAvaible "too many redirects"
-      _  -> NotAvaible $ "Internal bot error, please contact " <> feedbackAddress
+         -> "too many redirects"
+      _  -> "Internal bot error, please contact " <> feedbackAddress
       
 
 -- | Translates Http response status into server status.
