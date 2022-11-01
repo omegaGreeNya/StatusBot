@@ -30,3 +30,7 @@ After that you can enable bot with:
   - token - telegram bot token.
   - timeout - Time interval in seconds for long polling (recomended 10-30).
 - feedback - address to send user feedback to, adderess may be replied to user in case of unexpected error (Unxpected errors would be logged as ERROR though).
+
+Little talk about the code (ru):\
+https://youtu.be/ZwZX5Q0m3sI \
+https://youtu.be/y3RwrXwJOA4
