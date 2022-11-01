@@ -1,7 +1,7 @@
 # StatusBot
 
 Installing via stack:\
-git clone https://github.com/omegaGreeNya/StatusBot.git\
+git clone https://github.com/omegaGreeNya/StatusBot.git \
 cd StatusBot\
 stack install
 
