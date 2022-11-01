@@ -15,7 +15,7 @@ After that you can enable bot with:
 `StatusBot-exe`. Enter `help`, to get the help message.
 
 
-#Config fields:
+# Config fields:
 - consoleLogging - for debug purposes only, with this option enabled app would log into console.
 - fileLogging - then `true`, logs into log file.
 - logFile - path to log file (file may not exist, it would be created).
@@ -31,6 +31,6 @@ After that you can enable bot with:
   - timeout - Time interval in seconds for long polling (recomended 10-30).
 - feedback - address to send user feedback to, adderess may be replied to user in case of unexpected error (Unxpected errors would be logged as ERROR though).
 
-Little talk about the code (ru):\
+#Little talk about the code (ru):
 https://youtu.be/ZwZX5Q0m3sI \
 https://youtu.be/y3RwrXwJOA4
