@@ -9,7 +9,7 @@ stack install
 
 
 # Usage:
-First, you will need to specify bot settings (currently for telegram). Open config.json and edit token field with your bot token value. Also, make sure that telegramUsage = true, otherwise telegram-side would not be enabled.
+First, you will need to specify bot settings (currently for telegram). Open `config.json` and edit `token` field with your bot token value. Also, make sure that `telegramUsage = true`, otherwise telegram-side would not be enabled.
 
 After that you can enable bot with:
 `StatusBot-exe`. Enter `help`, to get the help message.
